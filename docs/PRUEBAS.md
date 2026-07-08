@@ -1,29 +1,35 @@
 # Pruebas
 
-## Backend
+Las pruebas unitarias se ejecutan con Maven. Para correrlas localmente se necesita Java 17 y Maven instalados en la maquina.
 
-Servicio de riesgos:
+Docker no es obligatorio para las pruebas unitarias, pero si es la forma recomendada para probar el flujo completo con frontend, APIs y base de datos.
 
-- Valida que el score este entre 0 y 100.
-- Valida que una misma cedula entregue el mismo score.
-- Valida que las deudas tengan mensualidades no negativas.
-- Prueba los endpoints de score y deudas.
+## Servicio de riesgos
 
 ```bash
 cd services/risk-service
 mvn test
 ```
 
-Orquestador:
+Estas pruebas revisan:
 
-- Valida cedulas ecuatorianas correctas e incorrectas.
-- Prueba la regla de aprobacion.
-- Prueba el calculo de deuda mensual total.
+- Que el score este dentro del rango de 0 a 100.
+- Que una misma cedula entregue el mismo resultado.
+- Que las deudas tengan mensualidades validas.
+- Que los endpoints de score y deudas respondan correctamente.
+
+## Orquestador
 
 ```bash
 cd services/orchestrator-service
 mvn test
 ```
+
+Estas pruebas revisan:
+
+- Cedulas ecuatorianas validas e invalidas.
+- Regla de aprobacion del credito.
+- Calculo de deuda mensual total.
 
 ## Frontend
 
@@ -33,12 +39,26 @@ npm install
 npm run build
 ```
 
-## Pruebas manuales
+Ese build confirma que la aplicacion React compile correctamente.
 
-- Crear una evaluacion con cedula valida.
-- Crear una evaluacion con cedula invalida y revisar el mensaje.
-- Revisar que el historial se actualice despues de crear una evaluacion.
-- Apagar el orquestador y confirmar que el frontend muestre error.
+## Prueba manual recomendada
+
+1. Levantar el ambiente:
+
+```bash
+docker compose up --build
+```
+
+2. Abrir el frontend:
+
+```text
+http://localhost:5173
+```
+
+3. Crear una solicitud con cedula valida.
+4. Revisar que aparezca `Aprobado` o `Rechazado`.
+5. Confirmar que la evaluacion se agregue al historial.
+6. Probar una cedula invalida y revisar que el mensaje sea claro.
 
 ## Postman
 
@@ -53,3 +73,5 @@ Variables incluidas:
 - `orchestratorUrl`: `http://localhost:18080`
 - `riskUrl`: `http://localhost:8081`
 - `cedulaValida`: `1710034065`
+
+La coleccion sirve para probar el flujo principal y los endpoints del servicio de riesgos sin usar el frontend.
