@@ -1,0 +1,11 @@
+target/
+node_modules/
+dist/
+.quarkus/
+tools/
+.idea/
+.vscode/
+*.log
+.env
+.DS_Store
+postgres-data/

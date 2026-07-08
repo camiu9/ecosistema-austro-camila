@@ -1,0 +1,167 @@
+{
+  "info": {
+    "name": "Ecosistema Austro - Evaluacion de Creditos",
+    "description": "Solicitudes para probar el flujo de evaluacion de credito desde Postman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "orchestratorUrl",
+      "value": "http://localhost:18080"
+    },
+    {
+      "key": "riskUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "cedulaValida",
+      "value": "1710034065"
+    }
+  ],
+  "item": [
+    {
+      "name": "Consultar score de una cedula",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{riskUrl}}/v1/risks/{{cedulaValida}}/score",
+          "host": ["{{riskUrl}}"],
+          "path": ["v1", "risks", "{{cedulaValida}}", "score"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('La consulta responde correctamente', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('El score esta entre 0 y 100', () => pm.expect(body.score).to.be.within(0, 100));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consultar deudas de una cedula",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{riskUrl}}/v1/risks/{{cedulaValida}}/debts",
+          "host": ["{{riskUrl}}"],
+          "path": ["v1", "risks", "{{cedulaValida}}", "debts"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('La consulta responde correctamente', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('La respuesta trae una lista', () => pm.expect(body).to.be.an('array'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Registrar una evaluacion de credito",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cedula\": \"{{cedulaValida}}\",\n  \"requestedAmount\": 100,\n  \"termYears\": 2,\n  \"salary\": 1500\n}"
+        },
+        "url": {
+          "raw": "{{orchestratorUrl}}/v1/credit-evaluations",
+          "host": ["{{orchestratorUrl}}"],
+          "path": ["v1", "credit-evaluations"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('La evaluacion se crea correctamente', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('La respuesta trae el estado final', () => pm.expect(['APPROVED', 'REJECTED']).to.include(body.status));",
+              "pm.test('La evaluacion tiene identificador', () => pm.expect(body.id).to.be.a('string'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Intentar registrar una cedula invalida",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cedula\": \"0102030405\",\n  \"requestedAmount\": 100,\n  \"termYears\": 2,\n  \"salary\": 1500\n}"
+        },
+        "url": {
+          "raw": "{{orchestratorUrl}}/v1/credit-evaluations",
+          "host": ["{{orchestratorUrl}}"],
+          "path": ["v1", "credit-evaluations"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('La API rechaza la solicitud', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('El error es de validacion', () => pm.expect(body.code).to.eql('VALIDATION_ERROR'));",
+              "pm.test('El mensaje es legible', () => pm.expect(body.details[0]).to.include('Cedula'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ver evaluaciones registradas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{orchestratorUrl}}/v1/credit-evaluations",
+          "host": ["{{orchestratorUrl}}"],
+          "path": ["v1", "credit-evaluations"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('La consulta responde correctamente', () => pm.response.to.have.status(200));",
+              "pm.test('La respuesta trae una lista', () => pm.expect(pm.response.json()).to.be.an('array'));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
